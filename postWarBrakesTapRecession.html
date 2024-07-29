@@ -1,0 +1,148 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .banner {
+            background-color: #add8e6; /* Light blue background */
+            width: 100%;
+            text-align: center;
+            padding: 20px 0;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 20px; /* Optional: adds some space above the heading */
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        svg {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button-link {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 0 10px;
+            display: inline-flex;        
+        }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+
+        .bordered-paragraph {
+            border: 1px solid #d3d3d3; /* Light black (grey) border */
+            padding: 15px;
+            margin: 20px 0;
+            width: 80%; /* Adjust width as needed */
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+<div class="banner">
+    <h1>Recession Impacts On Birth Rates In US</h1>
+</div>
+<p class="bordered-paragraph">The Recession of 1949 looks to have impacted birth rates. The data points showed a steady trend up leading up to the recession of 1949. It is here where w start to see a decline</p>
+<svg width=1000 height=600>
+</svg>
+<div class="buttons">
+    <a href="theGreatRecession.html" class="button-link">The Great Recession&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-square" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm4.5 5.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z"/>
+      </svg></a>
+</div>
+</body>
+<script>
+    // Set the dimensions and margins of the graph
+    const margin = {top: 10, right: 30, bottom: 30, left: 60},
+          width = 1000 - margin.left - margin.right,
+          height = 600 - margin.top - margin.bottom;
+
+    // Append the svg object to the body of the page
+    const svg = d3.select("svg")
+                  .attr("width", width + margin.left + margin.right)
+                  .attr("height", height + margin.top + margin.bottom)
+                  .append("g")
+                  .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Fetch the data
+    const csvUrl = 'https://data.cdc.gov/api/views/e6fc-ccez/rows.csv';
+
+    d3.csv(csvUrl).then(data => {
+        // Parse the data
+        data = data.filter(d => {
+                const year = +d.Year;
+                if (year >= 1945 && year <= 1952) {
+                    d["Crude Birth Rate"] = +d["Crude Birth Rate"];
+                    return true;
+                }
+                return false;
+            });
+
+        // X axis
+        const x = d3.scaleLinear()
+                    .domain(d3.extent(data, d => d.Year))
+                    .range([ 0, width ]);
+        svg.append("g")
+           .attr("transform", `translate(0,${height})`)
+           .call(d3.axisBottom(x).ticks(data.length).tickFormat(d3.format("d")));
+           
+        // Y axis
+        const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d["Crude Birth Rate"])])
+                    .range([ height, 0 ]);
+        svg.append("g")
+           .call(d3.axisLeft(y));
+
+        // Add dots
+        svg.selectAll("dot")
+           .data(data)
+           .enter().append("circle")
+           .attr("class", "dot")
+           .attr("cx", d => x(d.Year))
+           .attr("cy", d => y(d["Crude Birth Rate"]))
+           .attr("r", 5);
+        
+        // Add axis labels
+        svg.append("text")
+           .attr("transform", `translate(${width / 2}, ${height + margin.bottom})`)
+           .style("text-anchor", "middle")
+           .text("Year");
+
+        svg.append("text")
+           .attr("transform", "rotate(-90)")
+           .attr("y", 0 - margin.left)
+           .attr("x", 0 - (height / 2))
+           .attr("dy", "1em")
+           .style("text-anchor", "middle")
+           .text("Crude Birth Rate");
+
+    }).catch(error => {
+        console.error('Error fetching or parsing data:', error);
+    });
+</script>
+</html>

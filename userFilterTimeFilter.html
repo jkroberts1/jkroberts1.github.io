@@ -1,0 +1,166 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .banner {
+            background-color: #add8e6; /* Light blue background */
+            width: 100%;
+            text-align: center;
+            padding: 20px 0;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 20px; /* Optional: adds some space above the heading */
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        svg {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button-link {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+
+        .button-link:hover {
+            background-color: #0056b3;
+        }
+
+        .bordered-paragraph {
+            border: 1px solid #d3d3d3; /* Light black (grey) border */
+            padding: 15px;
+            margin: 20px 0;
+            width: 80%; /* Adjust width as needed */
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+<div class="banner">
+    <h1>Recession Impacts On Birth Rates In US</h1>
+</div>
+<p class="bordered-paragraph">Now that we have taken a look at some recession periods, you now have the oppurtunity to zoom in on your own specified time periods. Maybe even look at some more recent recessions and see how they may have impated birthrates.</p>
+<div class="date-selectors">
+    <label for="start-year">Start Year:</label>
+    <input type="number" id="start-year" name="start-year" min="1909" max="2018" value="1909">
+    <label for="end-year">End Year:</label>
+    <input type="number" id="end-year" name="end-year" min="1909" max="2018" value="2018">
+    <button onclick="updateGraph()">Update Graph</button>
+</div>
+<svg width=1000 height=600>
+</svg>
+<div class="buttons">
+    <a href="home.html" class="button-link">Home</a>
+</div>
+</body>
+<script>
+    const margin = {top: 10, right: 30, bottom: 30, left: 60},
+          width = 1000 - margin.left - margin.right,
+          height = 600 - margin.top - margin.bottom;
+
+    const svg = d3.select("svg")
+                  .attr("width", width + margin.left + margin.right)
+                  .attr("height", height + margin.top + margin.bottom)
+                  .append("g")
+                  .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    let data; 
+
+    const csvUrl = 'https://data.cdc.gov/api/views/e6fc-ccez/rows.csv';
+
+    function clearSVG() {
+        svg.selectAll("*").remove();
+    }
+
+    function updateGraph() {
+        const startYear = +document.getElementById("start-year").value;
+        const endYear = +document.getElementById("end-year").value;
+
+        const filteredData = data.filter(d => {
+            const year = +d.Year;
+            return year >= startYear && year <= endYear;
+        }).map(d => {
+            return {
+                Year: +d.Year,
+                "Crude Birth Rate": +d["Crude Birth Rate"]
+            };
+        });
+
+        clearSVG();
+
+        // X axis
+        const x = d3.scaleLinear()
+                    .domain([startYear, endYear])
+                    .range([0, width]);
+        svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x)
+                .tickFormat(d3.format("d")));
+
+        // Y axis
+        const y = d3.scaleLinear()
+                    .domain([0, d3.max(filteredData, d => d["Crude Birth Rate"])])
+                    .range([height, 0]);
+        svg.append("g")
+        .call(d3.axisLeft(y));
+
+        // Add dots
+        svg.selectAll("circle")
+        .data(filteredData)
+        .enter().append("circle")
+        .attr("class", "dot")
+        .attr("cx", d => x(d.Year))
+        .attr("cy", d => y(d["Crude Birth Rate"]))
+        .attr("r", 5);
+
+        // Add axis labels
+        svg.append("text")
+        .attr("transform", `translate(${width / 2}, ${height + margin.bottom})`)
+        .style("text-anchor", "middle")
+        .text("Year");
+
+        svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Crude Birth Rate");
+    }
+
+    d3.csv(csvUrl).then(fetchedData => {
+        data = fetchedData; // Store the fetched data
+        updateGraph(); // Initial graph display
+    }).catch(error => {
+        console.error('Error fetching or parsing data:', error);
+    });
+</script>
+</html>
