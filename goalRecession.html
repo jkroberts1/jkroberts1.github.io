@@ -77,6 +77,20 @@
 </div>
 </body>
 <script>
+
+    function linearRegression(data) {
+            const n = data.length;
+            const sumX = d3.sum(data, d => d.Year);
+            const sumY = d3.sum(data, d => d["Crude Birth Rate"]);
+            const sumXY = d3.sum(data, d => d.Year * d["Crude Birth Rate"]);
+            const sumXX = d3.sum(data, d => d.Year * d.Year);
+
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+
+            return {slope, intercept};
+    }
+
     const margin = {top: 10, right: 30, bottom: 30, left: 60},
           width = 1000 - margin.left - margin.right,
           height = 600 - margin.top - margin.bottom;
@@ -109,8 +123,24 @@
         const y = d3.scaleLinear()
                     .domain([0, d3.max(data, d => d["Crude Birth Rate"])])
                     .range([ height, 0 ]);
+
+
+        const {slope, intercept} = linearRegression(data);
+
+        const line = d3.line()
+                    .x(d => x(d.Year))
+                    .y(d => y(d.Year * slope + intercept));
+
         svg.append("g")
-           .call(d3.axisLeft(y));
+            .call(d3.axisLeft(y));
+
+        svg.append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("d", line)
+        .style("stroke", "blue")
+        .style("stroke-width", 2)
+        .style("fill", "none");
 
         svg.selectAll("dot")
            .data(data)
