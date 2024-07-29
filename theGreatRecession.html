@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         .banner {
-            background-color: #add8e6; /* Light blue background */
+            background-color: #add8e6; 
             width: 100%;
             text-align: center;
             padding: 20px 0;
@@ -13,7 +13,7 @@
         }
         h1 {
             text-align: center;
-            margin-top: 20px; /* Optional: adds some space above the heading */
+            margin-top: 20px; 
         }
         body {
             display: flex;
@@ -55,10 +55,10 @@
         }
 
         .bordered-paragraph {
-            border: 1px solid #d3d3d3; /* Light black (grey) border */
+            border: 1px solid #d3d3d3; 
             padding: 15px;
             margin: 20px 0;
-            width: 80%; /* Adjust width as needed */
+            width: 80%; 
             text-align: left;
         }
     </style>
@@ -77,23 +77,19 @@
 </div>
 </body>
 <script>
-    // Set the dimensions and margins of the graph
     const margin = {top: 10, right: 30, bottom: 30, left: 60},
           width = 1000 - margin.left - margin.right,
           height = 600 - margin.top - margin.bottom;
 
-    // Append the svg object to the body of the page
     const svg = d3.select("svg")
                   .attr("width", width + margin.left + margin.right)
                   .attr("height", height + margin.top + margin.bottom)
                   .append("g")
                   .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Fetch the data
     const csvUrl = 'https://data.cdc.gov/api/views/e6fc-ccez/rows.csv';
 
     d3.csv(csvUrl).then(data => {
-        // Parse the data
         data = data.filter(d => {
                 const year = +d.Year;
                 if (year >= 2004 && year <= 2012) {
@@ -103,7 +99,6 @@
                 return false;
             });
 
-        // X axis
         const x = d3.scaleLinear()
                     .domain(d3.extent(data, d => d.Year))
                     .range([ 0, width ]);
@@ -111,14 +106,12 @@
            .attr("transform", `translate(0,${height})`)
            .call(d3.axisBottom(x).ticks(data.length).tickFormat(d3.format("d")));
            
-        // Y axis
         const y = d3.scaleLinear()
                     .domain([0, d3.max(data, d => d["Crude Birth Rate"])])
                     .range([ height, 0 ]);
         svg.append("g")
            .call(d3.axisLeft(y));
 
-        // Add dots
         svg.selectAll("dot")
            .data(data)
            .enter().append("circle")
@@ -127,7 +120,6 @@
            .attr("cy", d => y(d["Crude Birth Rate"]))
            .attr("r", 5);
         
-        // Add axis labels
         svg.append("text")
            .attr("transform", `translate(${width / 2}, ${height + margin.bottom})`)
            .style("text-anchor", "middle")
